@@ -124,7 +124,11 @@
           reader.readAsBinaryString(file)
         },
         exportData () {
-          exportXlsx(this.data)
+          const data = [
+            this.cols,
+            ...this.data.map(row => this.cols.map(col => row[col]))
+          ]
+          exportXlsx(data, '领料单')
         }
       }
     })
