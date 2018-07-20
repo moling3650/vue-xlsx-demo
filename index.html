@@ -11,7 +11,34 @@
 <body>
   <div id="app" class="container">
     <div class="row">
+      <div class="col-xs-6">
+        <form class="form-inline">
+          <div class="form-group">
+            <label for="file">选择领料单 </label>
+            <input type="file" class="form-control" id="file" :accept="SheetJSFT" @change="handleChange" />
+          </div>
+        </form>
+      </div>
       <button class="btn btn-success" @click="exportData">导出领料单</button>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+                <th v-for="col in cols" :key="col">{{ col }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(r, key) in data" :key="key">
+                <td v-for="col in cols" :key="col"> {{ r[col] }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -25,12 +52,76 @@
       data () {
         return {
           SheetJSFT: _SheetJSFT,
-          data: [['1', '2']]
+          cols: [],
+          productTypes: new Set(),
+          data: []
         }
       },
       methods: {
-        loadFile () {
-          
+        handleChange (e) {
+          const files = e.target.files
+          if (files && files[0]) {
+            this._loadFile(files[0])
+          }
+        },
+        _loadFile (file) {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            /* Parse data */
+            const bstr = e.target.result
+            const wb = XLSX.read(bstr, { type: 'binary' })
+            /* Get first worksheet */
+            const wsname = wb.SheetNames[0]
+            const ws = wb.Sheets[wsname]
+            /* Convert array of arrays */
+            const field = ws['Z7'].v.trim()
+            const newData = XLSX.utils.sheet_to_json(ws, { header: 1 }).slice(9).filter(r => r.length === 31).map(r => {
+              return {
+                '料号': r[1] && r[1].trim(),
+                '品名': r[2] && r[2].trim(),
+                '规格': r[3] && r[3].trim(),
+                '备注': r[19] && r[19].trim(),
+                '数量': r[13] && r[13].trim().replace(',', '')
+              }
+            })
+            /* Update state */
+            const data = JSON.parse(JSON.stringify(this.data))
+
+            newData.forEach(row => {
+              const index = data.findIndex(item => item['料号'] === row['料号'])
+              if (~index) {
+                data[index][field] = row['数量']
+                if (!this.productTypes.has(field) && row['备注']) {
+                  data[index]['备注'] += (data[index]['备注'] ? ' / ' : '') + row['备注'].trim()
+                }
+              } else {
+                const item = {
+                  '序号': data.length + 1,
+                  '料号': row['料号'],
+                  '品名': row['品名'],
+                  '规格': row['规格'],
+                  '备注': row['备注']
+                }
+                item[field] = row['数量']
+                data.push(item)
+              }
+            })
+            this.productTypes.add(field)
+            const cols = this.cols.length ? this.cols : Object.keys(data[0])
+            if (!cols.find(col => col === field)) {
+              cols.push(field)
+            }
+            data.forEach(item => {
+              delete item['合计']
+              item['合计'] = Object.entries(item)
+                .filter(([k, v]) => this.productTypes.has(k))
+                .map(([k, v]) => parseFloat(v) || 0)
+                .reduce((total, val) => total + val, 0)
+            })
+            this.cols = [...cols.filter(col => col !== '合计'), '合计']
+            this.data = data
+          }
+          reader.readAsBinaryString(file)
         },
         exportData () {
           exportXlsx(this.data)
