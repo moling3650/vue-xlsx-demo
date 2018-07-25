@@ -9,7 +9,31 @@ function exportXlsx (data, filename = 'data') {
   }
 
   function _toBlob (data) {
+    data.unshift(['材料欠料清单'])
+    data.unshift(['爱科通电子（深圳）有限公司'])
     const ws = XLSX.utils.aoa_to_sheet(data)
+    ws['!merges'] = [
+      {
+        s: {
+          c: 0,
+          r: 0
+        },
+        e: {
+          c: 8,
+          r: 0
+        }
+      },
+      {
+        s: {
+          c: 0,
+          r: 1
+        },
+        e: {
+          c: 8,
+          r: 1
+        }
+      }
+    ]
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'mysheet')
     const wbout = XLSX.write(wb, {type: 'binary', bookType: 'xlsx'})
