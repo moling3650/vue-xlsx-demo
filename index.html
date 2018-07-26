@@ -121,8 +121,14 @@
         },
         exportData () {
           const data = [
-            this.cols,
-            ...this.data.map(row => this.cols.map(col => row[col]))
+            ['爱科通电子（深圳）有限公司'],
+            ['领  料  单'],
+            ['序号', '任务单号', '产品代码', '规格型号', '订单数量', '制单日期', '领料部门'],
+            ...[...this.orderProducts.values()]
+              .map((item, index) => [index + 1, item.taskOrder, undefined, item.product, undefined, item.date, item.department]),
+            [...this.cols, '发料数量', '实发数量',  '退料数', '损耗数', '损耗率'],
+            ...this.data.map(item => this.cols.map(c => item[c])),
+            ['  发料：       领料：        退料：         收料：         入账：       入账审核：                          ']
           ]
           exportXlsx(data, '领料单')
         }

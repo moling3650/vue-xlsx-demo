@@ -9,8 +9,7 @@ function exportXlsx (data, filename = 'data') {
   }
 
   function _toBlob (data) {
-    data.unshift(['材料欠料清单'])
-    data.unshift(['爱科通电子（深圳）有限公司'])
+    const maxCol = Math.max(...data.map(item => item.length)) - 1
     const ws = XLSX.utils.aoa_to_sheet(data)
     ws['!merges'] = [
       {
@@ -19,7 +18,7 @@ function exportXlsx (data, filename = 'data') {
           r: 0
         },
         e: {
-          c: 8,
+          c: maxCol,
           r: 0
         }
       },
@@ -29,8 +28,18 @@ function exportXlsx (data, filename = 'data') {
           r: 1
         },
         e: {
-          c: 8,
+          c: maxCol,
           r: 1
+        }
+      },
+      {
+        s: {
+          c: 0,
+          r: data.length - 1
+        },
+        e: {
+          c: maxCol,
+          r: data.length - 1
         }
       }
     ]
