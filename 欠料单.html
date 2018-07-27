@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>欠料单导出</title>
+  <link rel="stylesheet" href="static/css/bootstrap.min.css">
+  <script src="static/js/vue.min.js"></script>
+  <script src="static/js/xlsx.full.min.js"></script>
+  <script src="static/js/common.js"></script>
+</head>
+<body>
+  <div id="app" class="container">
+    <div class="row">
+      <div class="col-xs-6">
+        <form class="form-inline">
+          <div class="form-group">
+            <label for="file">选择欠料单 </label>
+            <input type="file" class="form-control" id="file" :accept="SheetJSFT" @change="handleChange" />
+          </div>
+        </form>
+      </div>
+      <button class="btn btn-success" @click="exportData">导出欠料单</button>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+                <th v-for="col in cols" :key="col.value">{{ col.label }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(r, key) in data" :key="key">
+                <td v-for="col in cols" :key="col.value"> {{ r[col.value] }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const _SheetJSFT = [
+      'xlsx', 'xlsb', 'xlsm', 'xls', 'xml', 'csv', 'txt', 'ods', 'fods', 'uos', 'sylk', 'dif', 'dbf', 'prn', 'qpw', '123', 'wb*', 'wq*', 'html', 'htm'
+    ].map(x => `.${x}`).join(',')
+
+    new Vue({
+      el: '#app',
+      data () {
+        return {
+          SheetJSFT: _SheetJSFT,
+          cols: [
+            {label: '物料类型', value: 'type'},
+            {label: '物料代码', value: 'code'},
+            {label: '物料名称', value: 'name'},
+            {label: '规格型号', value: 'spec'},
+            {label: '订单数量', value: 'orderQty'},
+          ],
+          materials: new Map(),
+          products: new Map(),
+          data: []
+        }
+      },
+      methods: {
+        handleChange (e) {
+          const files = e.target.files
+          if (files && files[0]) {
+            this._loadFile(files[0])
+          }
+        },
+        _loadFile (file) {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            /* Parse data */
+            const bstr = e.target.result
+            const wb = XLSX.read(bstr, { type: 'binary' })
+            /* Get first worksheet */
+            const wsname = wb.SheetNames[0]
+            const ws = wb.Sheets[wsname]
+            // /* Convert array of arrays */
+            let newData = XLSX.utils.sheet_to_json(ws, { header: 1 })
+            newData = newData.slice(1, newData.length - 1)
+            if (!newData.every(item => item.length === 21)) {
+              return void alert('请选择正确格式的欠料单')
+            }
+            newData.filter(item => item[11] === '普通订单').forEach(item => {
+              const key = `${item[15]}__${item[2]}`
+              const product = this.products.get(key)
+
+              if (product) {
+                product.orderQty += parseFloat(item[8])
+                this.products.set(key, product)
+              } else {
+                this.products.set(key, {
+                  order: item[15],
+                  code: item[2],
+                  name: item[3],
+                  spec: item[4],
+                  orderQty: parseFloat(item[8])
+                })
+              }
+            })
+            newData.filter(item => !item[11]).forEach(item => {
+              const key = item[2]
+              const material = this.materials.get(key)
+              if (material) {
+                material.orderQty += parseFloat(item[8])
+                this.materials.set(key, material)
+              } else {
+                this.materials.set(key, {
+                  code: item[2],
+                  name: item[3],
+                  spec: item[4],
+                  orderQty: parseFloat(item[8])
+                })
+              }
+            })
+            this.data = [
+              ...Array.from(this.products.values()).map(item => {
+                item.type = '成品'
+                return item
+              }),
+              ...Array.from(this.materials.values()).map(item => {
+                item.type = '原材料'
+                return item
+              })
+            ]
+          }
+          reader.readAsBinaryString(file)
+        },
+        exportData () {
+          const data = [
+            ['爱科通电子（深圳）有限公司'],
+            ['欠  料  单'],
+            ['序号', '订单号', '订单数量', '产品代码', '规格型号', '日期'],
+            ...Array.from(this.products.values())
+              .map((item, index) => [index + 1, item.order, item.orderQty, item.code, item.spec, undefined]),
+            [],  
+            ['序号', '物料代码', '物料名称', '规格型号', '欠料数', '到料日期', '替代物料', '替代方式', '弃装'],
+            ...Array.from(this.materials.values())
+              .map((item, index) => [index + 1, item.code, item.name, item.spec, item.orderQty]),
+            ['   说明：替代方式有以下三种方式：  A:只针对本订单替代;   B:针对此机型替代;  C:所有机型替代.'],
+            ['   制表：                           审核：                 ']
+          ]
+          exportXlsx(data, '欠料单')
+        }
+      }
+    })
+  </script>
+</body>
+</html>
