@@ -11,6 +11,9 @@
 <body>
   <div id="app" class="container">
     <div class="row">
+      <strong>已导入文件： {{ Array.from(files.values()).join(' | ') }}</strong>
+    </div>
+    <div class="row">
       <div class="col-xs-6">
         <form class="form-inline">
           <div class="form-group">
@@ -19,9 +22,11 @@
           </div>
         </form>
       </div>
+      <button class="btn btn-success" @click="clear">清空文件</button>
       <button class="btn btn-success" @click="exportData">导出领料单</button>
+      <button class="btn btn-success" @click="exportData2">导出领料单（合并）</button>
     </div>
-
+    
     <div class="row">
       <div class="col-md-12">
         <div class="table-responsive">
@@ -52,6 +57,7 @@
       data () {
         return {
           SheetJSFT: _SheetJSFT,
+          files: new Set(),
           cols: [],
           orders: new Set(),
           orderProducts: new Map(),
@@ -68,6 +74,9 @@
         _loadFile (file) {
           const reader = new FileReader()
           reader.onload = (e) => {
+            if (this.files.has(file.name)) {
+              return void alert(`${file.name}已经导入`)
+            }
             /* Parse data */
             const bstr = e.target.result
             const wb = XLSX.read(bstr, { type: 'binary' })
@@ -77,6 +86,7 @@
             if (!ws.O2 || ws.O2.v !== '领料单') {
               return void alert('请选择正确格式的领料单')
             }
+            this.files.add(file.name)
             const department = ws.B6.v
             const date = ws.R7.v
             // /* Convert array of arrays */
@@ -119,6 +129,14 @@
           }
           reader.readAsBinaryString(file)
         },
+        clear () {
+          this.files.clear()
+          this.cols = []
+          this.orders.clear()
+          this.orderProducts.clear()
+          this.data = []
+          document.getElementById('file').value = ''
+        },
         exportData () {
           const data = [
             ['爱科通电子（深圳）有限公司'],
@@ -132,6 +150,23 @@
             ['  发料：       领料：        退料：         收料：         入账：       入账审核：                          ']
           ]
           exportXlsx(data, '领料单')
+        },
+        exportData2 () {
+          const data = [
+            ['爱科通电子（深圳）有限公司'],
+            ['领  料  单'],
+            ['序号', '任务单号', '产品代码', '规格型号', '订单数量', '制单日期', '领料部门'],
+            ...[...this.orderProducts.values()]
+              .map((item, index) => [index + 1, item.taskOrder, undefined, item.product, undefined, item.date, item.department]),
+            [],  
+            ['序号', '物料代码', '物料名称', '规格型号', '替代状况', '发料数量', '实发数量',  '退料数', '损耗数', '损耗率'],
+            ...this.data.map(item => {
+              const qty = Array.from(this.orders.values()).map(o => item[o] ? parseFloat(item[o].replace(',', '')) : 0).reduce((t, n) => t + n, 0)
+              return [item['序号'], item['物料代码'], item['物料名称'], item['规格型号'], item['替代状况'], qty]
+            }),
+            ['  发料：       领料：        退料：         收料：         入账：       入账审核：                          ']
+          ]
+          exportXlsx(data, '领料单（合并）')
         }
       }
     })
