@@ -24,6 +24,7 @@
           </div>
         </form>
       </div>
+      <button class="btn btn-danger" @click="clear">清空文件</button>
       <button class="btn btn-success" @click="exportData">导出欠料单</button>
     </div>
 
@@ -76,6 +77,13 @@
           if (files && files[0]) {
             this._loadFile(files[0])
           }
+        },
+        clear () {
+          this.files.clear()
+          this.materials.clear()
+          this.products.clear()
+          this.data = []
+          document.getElementById('file').value = ''
         },
         _loadFile (file) {
           const reader = new FileReader()
