@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>物料管理</title>
+  <title>领料单导出</title>
   <link rel="stylesheet" href="static/css/bootstrap.min.css">
   <script src="static/js/vue.min.js"></script>
   <script src="static/js/xlsx.full.min.js"></script>
@@ -126,6 +126,7 @@
             ['序号', '任务单号', '产品代码', '规格型号', '订单数量', '制单日期', '领料部门'],
             ...[...this.orderProducts.values()]
               .map((item, index) => [index + 1, item.taskOrder, undefined, item.product, undefined, item.date, item.department]),
+            [],  
             [...this.cols, '发料数量', '实发数量',  '退料数', '损耗数', '损耗率'],
             ...this.data.map(item => this.cols.map(c => item[c])),
             ['  发料：       领料：        退料：         收料：         入账：       入账审核：                          ']
