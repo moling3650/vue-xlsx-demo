@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <title>欠料单导出</title>
   <link rel="stylesheet" href="static/css/bootstrap.min.css">
+  <style>
+    @media print {
+      .print-hide {
+        display: none;
+      }
+    }
+    th {
+      text-align: center;
+    }
+  </style>
   <script src="static/js/vue.min.js"></script>
   <script src="static/js/xlsx.full.min.js"></script>
   <script src="static/js/common.js"></script>
@@ -17,12 +27,12 @@
     </div>
   </nav>
   <div id="app" style="margin-top: 60px" class="container">
-    <div class="row">
+    <div class="row print-hide">
       <div class="col-xs-12">
         <strong>已导入文件： {{ Array.from(files.values()).join(' | ') }}</strong>
       </div>
     </div>
-    <div class="row">
+    <div class="row print-hide">
       <div class="col-xs-6">
         <form class="form-inline">
           <div class="form-group">
@@ -33,6 +43,7 @@
       </div>
       <button class="btn btn-danger" @click="clear">清空文件</button>
       <button class="btn btn-success" @click="exportData">导出欠料单</button>
+      <button class="btn btn-success" @click="window.print">打印欠料单</button>
     </div>
 
     <div class="row">
@@ -41,12 +52,53 @@
           <table class="table table-striped table-bordered">
             <thead>
               <tr>
-                <th v-for="col in cols" :key="col.value">{{ col.label }}</th>
+                <th colspan="6">爱科通电子（深圳）有限公司</th>
+              </tr>
+              <tr>
+                <th colspan="6">欠  料  单</th>
+              </tr>
+              <tr>
+                <th>序号</th>
+                <th>订单号</th>
+                <th>订单数量</th>
+                <th>产品代码</th>
+                <th>规格型号</th>
+                <th>日期</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(r, key) in data" :key="key">
-                <td v-for="col in cols" :key="col.value"> {{ r[col.value] }}</td>
+              <tr v-for="row in orderProducts" :key="row">
+                <td v-for="col in row" :key="col">{{ col }}</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>          
+
+          <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+                <th>序号</th>
+                <th>物料代码</th>
+                <th>物料名称</th>
+                <th>规格型号</th>
+                <th>欠料数</th>
+                <th>到料日期</th>
+                <th>替代物料</th>
+                <th>替代方式</th>
+                <th>弃装</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in orderMaterals" :key="row">
+                <td v-for="col in row" :key="col"> {{ col }}</td>
+                <td v-for="n in 4"></td>
+              </tr>
+              <tr>
+                <td colspan="9">   说明：替代方式有以下三种方式：  A:只针对本订单替代;   B:针对此机型替代;  C:所有机型替代.</td>
+              </tr>
+              <tr>
+                <td colspan="4">制表：</td>
+                <td colspan="5">审核：</td>
               </tr>
             </tbody>
           </table>
@@ -75,10 +127,15 @@
           ],
           materials: new Map(),
           products: new Map(),
-          data: []
+          data: [],
+          orderProducts: [],
+          orderMaterals: []
         }
       },
       methods: {
+        print () {
+          window.print()
+        },
         handleChange (e) {
           const files = e.target.files
           if (files && files[0]) {
@@ -153,6 +210,10 @@
                 return item
               })
             ]
+            this.orderProducts = Array.from(this.products.values())
+              .map((item, index) => [index + 1, item.order, item.orderQty, item.code, item.spec])
+            this.orderMaterals = Array.from(this.materials.values())
+              .map((item, index) => [index + 1, item.code, item.name, item.spec, item.orderQty])
           }
           reader.readAsBinaryString(file)
         },
