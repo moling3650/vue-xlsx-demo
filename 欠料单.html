@@ -13,6 +13,9 @@
     th {
       text-align: center;
     }
+    td {
+      width: 100px;
+    }
   </style>
   <script src="static/js/vue.min.js"></script>
   <script src="static/js/xlsx.full.min.js"></script>
@@ -60,9 +63,9 @@
               <tr>
                 <th>序号</th>
                 <th>订单号</th>
-                <th>订单数量</th>
                 <th>产品代码</th>
                 <th>规格型号</th>
+                <th>订单数量</th>
                 <th>日期</th>
               </tr>
             </thead>
@@ -118,13 +121,6 @@
         return {
           files: new Set(),
           SheetJSFT: _SheetJSFT,
-          cols: [
-            {label: '物料类型', value: 'type'},
-            {label: '物料代码', value: 'code'},
-            {label: '物料名称', value: 'name'},
-            {label: '规格型号', value: 'spec'},
-            {label: '订单数量', value: 'orderQty'},
-          ],
           materials: new Map(),
           products: new Map(),
           data: [],
@@ -211,7 +207,7 @@
               })
             ]
             this.orderProducts = Array.from(this.products.values())
-              .map((item, index) => [index + 1, item.order, item.orderQty, item.code, item.spec])
+              .map((item, index) => [index + 1, item.order, item.code, item.spec, item.orderQty])
             this.orderMaterals = Array.from(this.materials.values())
               .map((item, index) => [index + 1, item.code, item.name, item.spec, item.orderQty])
           }
@@ -221,13 +217,11 @@
           const data = [
             ['爱科通电子（深圳）有限公司'],
             ['欠  料  单'],
-            ['序号', '订单号', '订单数量', '产品代码', '规格型号', '日期'],
-            ...Array.from(this.products.values())
-              .map((item, index) => [index + 1, item.order, item.orderQty, item.code, item.spec, undefined]),
+            ['序号', '订单号', '产品代码', '规格型号', '订单数量', '日期'],
+            ...this.orderProducts,
             [],  
             ['序号', '物料代码', '物料名称', '规格型号', '欠料数', '到料日期', '替代物料', '替代方式', '弃装'],
-            ...Array.from(this.materials.values())
-              .map((item, index) => [index + 1, item.code, item.name, item.spec, item.orderQty]),
+            ...this.orderMaterals,
             ['   说明：替代方式有以下三种方式：  A:只针对本订单替代;   B:针对此机型替代;  C:所有机型替代.'],
             ['   制表：                           审核：                 ']
           ]
