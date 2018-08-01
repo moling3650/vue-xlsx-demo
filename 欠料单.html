@@ -48,8 +48,8 @@
         </form>
       </div>
       <button class="btn btn-danger" @click="clear">清空文件</button>
-      <button class="btn btn-success" @click="exportData">导出欠料单</button>
-      <button class="btn btn-success" @click="window.print">打印欠料单</button>
+      <button class="btn btn-success" @click="exportData">导出</button>
+      <button class="btn btn-success" @click="window.print">打印</button>
     </div>
 
     <div class="row">
@@ -126,7 +126,6 @@
           SheetJSFT: _SheetJSFT,
           materials: new Map(),
           products: new Map(),
-          data: [],
           orderProducts: [],
           orderMaterals: []
         }
@@ -145,7 +144,8 @@
           this.files.clear()
           this.materials.clear()
           this.products.clear()
-          this.data = []
+          this.orderProducts = []
+          this.orderMaterals = []
           document.getElementById('file').value = ''
         },
         _loadFile (file) {
