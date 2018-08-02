@@ -21,11 +21,24 @@
       word-wrap: break-word;
       word-break:break-all;
     }
+    td:nth-child(1), td:nth-child(2), td:nth-child(3) {
+      white-space: nowrap;
+    }
+    td:nth-child(1) {
+      text-align: center;
+    }
     td:nth-child(4), td:nth-child(5) {
-      width: 80px;
+      width: 100px;
     }
     td:nth-child(4) {
       word-wrap: break-word;
+    }
+    td > span {
+      display: inline-block;
+      width: 100px;
+    }
+    .fz20 {
+      font-size: 20px;
     }
   </style>
   <script src="static/js/vue.min.js"></script>
@@ -53,18 +66,20 @@
             <label for="file">选择领料单 </label>
             <input type="file" class="form-control" id="file" :accept="SheetJSFT" @change="handleChange" />
           </div>
-          <div class="form-group">
+<!--           <div class="form-group">
             <div class="checkbox">
               <label>
                 <input type="checkbox" v-model="showDetail"> 显示明细
               </label>
             </div>
-          </div>
+          </div> -->
         </form>
       </div>
       <button class="btn btn-danger" @click="clear">清空文件</button>
-      <button class="btn btn-success" @click="exportData">导出</button>
-      <button class="btn btn-success" @click="window.print">打印</button>
+      <button class="btn btn-success" @click="exportData(false)">领料单</button>
+      <button class="btn btn-success" @click="print(false)">领料单打印</button>      
+      <button class="btn btn-success" @click="exportData(true)">领料单明细</button>
+      <button class="btn btn-success" @click="print(true)">领料单明细打印</button>
     </div>
     
     <div class="row">
@@ -73,10 +88,10 @@
           <table class="table table-striped table-bordered">
             <thead>
               <tr>
-                <th colspan="7">爱科通电子（深圳）有限公司</th>
+                <th colspan="7" class="fz20">爱科通电子（深圳）有限公司</th>
               </tr>
               <tr>
-                <th colspan="7">领  料  单</th>
+                <th colspan="7" class="fz20">领  料  单</th>
               </tr>
               <tr>
                 <th>序号</th>
@@ -106,8 +121,15 @@
                 <td v-for="col in row" :key="col"> {{ col }}</td>
               </tr>
               <tr v-if="materalData.length">
-                <td :colspan="materalData.length">  发料：       领料：        退料：         收料：         入账：       入账审核：</td>
-              </tr>
+                <td :colspan="materalData.length">
+                  <span>发料：</span>
+                  <span>领料：</span>
+                  <span>退料：</span>
+                  <span>收料：</span>
+                  <span>入账：</span>
+                  <span>入账审核：</span>
+                </td>
+            </tr>
             </tbody>
           </table>
         </div>
@@ -230,7 +252,16 @@
           this.materals = {}
           document.getElementById('file').value = ''
         },
-        exportData () {
+        print (showDetail) {
+          this.$nextTick(_ => {            
+            this.showDetail = showDetail
+          })
+          setTimeout(_ => {
+            window.print()
+          }, 500)
+        },
+        exportData (showDetail) {
+          this.showDetail = showDetail
           const data = [
             ['爱科通电子（深圳）有限公司'],
             ['领  料  单'],
