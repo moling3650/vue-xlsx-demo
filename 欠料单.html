@@ -17,7 +17,28 @@
       text-align: center;
     }
     td {
+      width: 50px;
+      word-wrap: break-word;
+      word-break:break-all;
+    }
+    td:nth-child(1), td:nth-child(2), td:nth-child(3) {
+      white-space: nowrap;
+    }
+    td:nth-child(1) {
+      text-align: center;
+    }
+    td:nth-child(4), td:nth-child(5) {
       width: 100px;
+    }
+    td:nth-child(4) {
+      word-wrap: break-word;
+    }
+    td > span {
+      display: inline-block;
+      width: 100px;
+    }
+    .fz20 {
+      font-size: 20px;
     }
   </style>
   <script src="static/js/vue.min.js"></script>
@@ -48,8 +69,8 @@
         </form>
       </div>
       <button class="btn btn-danger" @click="clear">清空文件</button>
-      <button class="btn btn-success" @click="exportData">导出</button>
-      <button class="btn btn-success" @click="window.print">打印</button>
+      <button class="btn btn-success" @click="exportData">欠料单</button>
+      <button class="btn btn-success" @click="window.print">欠料单打印</button>
     </div>
 
     <div class="row">
@@ -58,10 +79,10 @@
           <table class="table table-striped table-bordered">
             <thead>
               <tr>
-                <th colspan="6">爱科通电子（深圳）有限公司</th>
+                <th colspan="6" class="fz20">爱科通电子（深圳）有限公司</th>
               </tr>
               <tr>
-                <th colspan="6">欠  料  单</th>
+                <th colspan="6" class="fz20">欠  料  单</th>
               </tr>
               <tr>
                 <th>序号</th>
