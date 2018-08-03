@@ -199,8 +199,10 @@
               return void alert('请选择正确格式的领料单')
             }
             this.files.add(file.name)
-            const department = ws.B6.v
-            const date = ws.R7.v
+            const department = ws.B5.v
+            const date = ws.R5.v
+            const productCode = ws.P4.v
+            const orderQty = ws.J5.v
             // /* Convert array of arrays */
             const newData = XLSX.utils.sheet_to_json(ws, { header: 1 }).filter(r => parseInt(r[0]) >= 0)
             newData.forEach(item => {
@@ -208,9 +210,9 @@
                 this.orderProducts.push([
                   this.orderProducts.length + 1,
                   item[26],
-                  undefined,
+                  productCode,
                   item[9],
-                  undefined,
+                  orderQty,
                   date,
                   department
                 ])
